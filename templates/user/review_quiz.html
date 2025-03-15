@@ -1,0 +1,197 @@
+{% extends "user/base_user.html" %}
+
+{% block title %}Review Quiz{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-3">
+        <div class="col">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('user_dashboard') }}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('view_score', score_id=score.id) }}">Quiz Results</a></li>
+                    <li class="breadcrumb-item active">Review Quiz</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2>Review Quiz: {{ quiz.chapter.name }}</h2>
+            <p class="text-muted">{{ quiz.chapter.subject.name }}</p>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-light">
+                <div class="card-body text-center">
+                    <h5 class="mb-1">Your Score</h5>
+                    <span class="display-6 
+                        {{ 'text-success' if score.total_scored >= 70 else 'text-warning' if score.total_scored >= 40 else 'text-danger' }}">
+                        {{ score.total_scored }}%
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-9">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Question Review</h5>
+                    <div>
+                        <span class="badge bg-success">{{ score.correct_answers }} Correct</span>
+                        <span class="badge bg-danger">{{ score.wrong_answers }} Wrong</span>
+                        <span class="badge bg-secondary">{{ score.not_attempted }} Not Attempted</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% for question in questions %}
+                    <div class="card mb-4">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">Question {{ loop.index }}</h5>
+                            {% if question.id in user_answers %}
+                                {% if user_answers[question.id] == question.correct_option %}
+                                    <span class="badge bg-success">Correct</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Wrong</span>
+                                {% endif %}
+                            {% else %}
+                                <span class="badge bg-warning">Not Attempted</span>
+                            {% endif %}
+                        </div>
+                        <div class="card-body">
+                            <p class="fw-bold">{{ question.question_statement }}</p>
+                            {% if question.question_image %}
+                            <div class="mb-3">
+                                <img src="{{ url_for('uploaded_file', filename=question.question_image) }}" 
+                                     alt="Question Image" class="img-fluid" style="max-height: 300px;">
+                            </div>
+                            {% endif %}
+
+                            <div class="mt-4">
+                                <div class="mb-2 d-flex align-items-center">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" disabled 
+                                              {% if question.id in user_answers and user_answers[question.id] == 1 %}checked{% endif %}>
+                                        <label class="form-check-label 
+                                               {% if question.correct_option == 1 %}text-success fw-bold{% endif %}
+                                               {% if question.id in user_answers and user_answers[question.id] == 1 and question.correct_option != 1 %}text-danger{% endif %}">
+                                            {{ question.option_1 }}
+                                            {% if question.correct_option == 1 %}<i class="fas fa-check-circle text-success ms-2"></i>{% endif %}
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="mb-2 d-flex align-items-center">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" disabled 
+                                              {% if question.id in user_answers and user_answers[question.id] == 2 %}checked{% endif %}>
+                                        <label class="form-check-label 
+                                               {% if question.correct_option == 2 %}text-success fw-bold{% endif %}
+                                               {% if question.id in user_answers and user_answers[question.id] == 2 and question.correct_option != 2 %}text-danger{% endif %}">
+                                            {{ question.option_2 }}
+                                            {% if question.correct_option == 2 %}<i class="fas fa-check-circle text-success ms-2"></i>{% endif %}
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="mb-2 d-flex align-items-center">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" disabled 
+                                              {% if question.id in user_answers and user_answers[question.id] == 3 %}checked{% endif %}>
+                                        <label class="form-check-label 
+                                               {% if question.correct_option == 3 %}text-success fw-bold{% endif %}
+                                               {% if question.id in user_answers and user_answers[question.id] == 3 and question.correct_option != 3 %}text-danger{% endif %}">
+                                            {{ question.option_3 }}
+                                            {% if question.correct_option == 3 %}<i class="fas fa-check-circle text-success ms-2"></i>{% endif %}
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="mb-2 d-flex align-items-center">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" disabled 
+                                              {% if question.id in user_answers and user_answers[question.id] == 4 %}checked{% endif %}>
+                                        <label class="form-check-label 
+                                               {% if question.correct_option == 4 %}text-success fw-bold{% endif %}
+                                               {% if question.id in user_answers and user_answers[question.id] == 4 and question.correct_option != 4 %}text-danger{% endif %}">
+                                            {{ question.option_4 }}
+                                            {% if question.correct_option == 4 %}<i class="fas fa-check-circle text-success ms-2"></i>{% endif %}
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {% if question.id not in user_answers %}
+                            <div class="alert alert-warning mt-3">
+                                <i class="fas fa-exclamation-triangle me-2"></i> You did not attempt this question. The correct answer is option {{ question.correct_option }}.
+                            </div>
+                            {% elif user_answers[question.id] != question.correct_option %}
+                            <div class="alert alert-info mt-3">
+                                <i class="fas fa-info-circle me-2"></i> The correct answer is option {{ question.correct_option }}.
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card mb-4 sticky-top" style="top: 20px;">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Question Navigator</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row row-cols-3 g-2">
+                        {% for question in questions %}
+                        {% set user_answer = user_answers.get(question.id, none) %}
+                        {% set is_correct = user_answer and user_answer == question.correct_option %}
+                        {% set is_attempted = user_answer is not none %}
+
+                        <div class="col">
+                            <button type="button" 
+                                class="btn btn-sm w-100 
+                                    {{ 'btn-success' if is_correct else 'btn-danger' if is_attempted else 'btn-secondary' }}"
+                                data-bs-toggle="collapse" 
+                                data-bs-target="#collapse{{ question.id }}">
+                                {{ loop.index }}
+                            </button>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="d-grid gap-2 mt-4">
+                        <a href="{{ url_for('view_score', score_id=score.id) }}" class="btn btn-primary">
+                            Back to Results
+                        </a>
+                        <a href="{{ url_for('user_dashboard') }}" class="btn btn-outline-secondary">
+                            Dashboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<style>
+    .option-correct {
+        background-color: rgba(25, 135, 84, 0.1);
+        border-radius: 0.25rem;
+        padding: 10px;
+    }
+
+    .option-wrong {
+        background-color: rgba(220, 53, 69, 0.1);
+        border-radius: 0.25rem;
+        padding: 10px;
+    }
+
+    .accordion-button:not(.collapsed) {
+        background-color: rgba(13, 110, 253, 0.1);
+        color: #0d6efd;
+    }
+</style>
+{% endblock %}

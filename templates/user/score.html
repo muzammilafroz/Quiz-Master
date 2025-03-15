@@ -1,0 +1,153 @@
+{% extends "user/base_user.html" %}
+
+{% block title %}Quiz Results{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('user_dashboard') }}">Dashboard</a></li>
+                    <li class="breadcrumb-item active">Quiz Results</li>
+                </ol>
+            </nav>
+            <h2>Quiz Results: {{ score.quiz.chapter.name }}</h2>
+            <p class="text-muted">Completed on {{ score.time_stamp_of_attempt.strftime('%B %d, %Y at %H:%M') }}</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Score Overview -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Score Overview</h5>
+                </div>
+                <div class="card-body text-center">
+                    <div class="display-1 mb-3">{{ score.total_scored }}%</div>
+                    
+                    <div class="progress mb-3" style="height: 10px;">
+                        <div class="progress-bar bg-{{ 'success' if score.total_scored >= 70 else 'warning' if score.total_scored >= 40 else 'danger' }}" 
+                             role="progressbar" 
+                             style="width: {{ score.total_scored }}%;" 
+                             aria-valuenow="{{ score.total_scored }}" 
+                             aria-valuemin="0" 
+                             aria-valuemax="100">
+                        </div>
+                    </div>
+                    
+                    <div class="text-{{ 'success' if score.total_scored >= 70 else 'warning' if score.total_scored >= 40 else 'danger' }}">
+                        {% if score.total_scored >= 70 %}
+                            <i class="fas fa-check-circle"></i> Excellent!
+                        {% elif score.total_scored >= 40 %}
+                            <i class="fas fa-exclamation-circle"></i> Good effort!
+                        {% else %}
+                            <i class="fas fa-times-circle"></i> Needs improvement
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <div class="d-flex justify-content-between">
+                        <span>Total Questions:</span>
+                        <strong>{{ score.total_questions }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span>Questions Attempted:</span>
+                        <strong>{{ score.correct_answers + score.wrong_answers }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span>Accuracy:</span>
+                        <strong>{{ (score.correct_answers / (score.correct_answers + score.wrong_answers) * 100)|round|int if (score.correct_answers + score.wrong_answers) > 0 else 0 }}%</strong>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span>Subject:</span>
+                        <strong>{{ score.quiz.chapter.subject.name }}</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Performance Breakdown -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">Performance Breakdown</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="performanceChart" height="180"></canvas>
+                    
+                    <div class="mt-3">
+                        <div class="d-flex justify-content-between text-auto-contrast mb-2">
+                            <span>Correct Answers:</span>
+                            <strong class="text-success">{{ score.correct_answers }}</strong>
+                        </div>
+                        <div class="d-flex justify-content-between text-auto-contrast mb-2">
+                            <span>Wrong Answers:</span>
+                            <strong class="text-danger">{{ score.wrong_answers }}</strong>
+                        </div>
+                        <div class="d-flex justify-content-between text-auto-contrast">
+                            <span>Not Attempted:</span>
+                            <strong class="text-warning">{{ score.not_attempted }}</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Progress Chart -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Your Progress</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="progressChart" height="180"></canvas>
+                    
+                    <div class="mt-3 text-center">
+                        <a href="{{ url_for('quiz_review', quiz_id=score.quiz.id, score_id=score.id) }}" class="btn btn-primary">
+                            Review Quiz
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Call to action -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5>Continue Learning</h5>
+                            <p class="mb-0 text-auto-contrast">Take more quizzes to improve your knowledge!</p>
+                        </div>
+                        <a href="{{ url_for('user_dashboard') }}" class="btn btn-primary">
+                            Back to Dashboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Performance breakdown data
+        const performanceLabels = ['Correct', 'Wrong', 'Not Attempted'];
+        const performanceData = [{{ score.correct_answers }}, {{ score.wrong_answers }}, {{ score.not_attempted }}];
+        createPieChart('performanceChart', performanceLabels, performanceData);
+        
+        // Progress chart data
+        const progressLabels = {{ progress_labels|tojson }};
+        const progressData = {{ progress_data|tojson }};
+        createScoreChart('progressChart', progressLabels, progressData);
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,87 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}Manage Quizzes{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col">
+            <h2>Manage Quizzes</h2>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Add New Quiz</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        {{ form.hidden_tag() }}
+                        <div class="mb-3">
+                            {{ form.chapter_id.label(class="form-label") }}
+                            {{ form.chapter_id(class="form-select") }}
+                        </div>
+                        <div class="mb-3">
+                            {{ form.date_of_quiz.label(class="form-label") }}
+                            {{ form.date_of_quiz(class="form-control", type="date") }}
+                        </div>
+                        <div class="mb-3">
+                            {{ form.time_duration.label(class="form-label") }}
+                            {{ form.time_duration(class="form-control", type="number") }}
+                        </div>
+                        <div class="mb-3">
+                            {{ form.remarks.label(class="form-label") }}
+                            {{ form.remarks(class="form-control") }}
+                        </div>
+                        <button type="submit" class="btn btn-primary">Add Quiz</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Quiz List</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Chapter</th>
+                                    <th>Subject</th>
+                                    <th>Date</th>
+                                    <th>Duration</th>
+                                    <th>Questions</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for quiz in quizzes %}
+                                <tr>
+                                    <td>{{ quiz.chapter.name }}</td>
+                                    <td>{{ quiz.chapter.subject.name }}</td>
+                                    <td>{{ quiz.date_of_quiz.strftime('%Y-%m-%d') }}</td>
+                                    <td>{{ quiz.time_duration }} mins</td>
+                                    <td>{{ quiz.questions|length }}</td>
+                                    <td>
+                                        <a href="{{ url_for('manage_questions', quiz_id=quiz.id) }}" class="btn btn-sm btn-success">Questions</a>
+                                        <a href="{{ url_for('edit_quiz', quiz_id=quiz.id) }}" class="btn btn-sm btn-info">Edit</a>
+                                        <form method="POST" action="{{ url_for('delete_quiz', quiz_id=quiz.id) }}" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this quiz?');">
+                                            <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

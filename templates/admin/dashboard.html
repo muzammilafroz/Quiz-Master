@@ -1,0 +1,118 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col">
+            <h2>Quiz Master Dashboard</h2>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-3">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Quick Stats</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-3">
+                        <span>Total Subjects:</span>
+                        <strong>{{ subjects|length }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-3">
+                        <span>Total Users:</span>
+                        <strong>{{ users|length }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span>Total Quizzes:</span>
+                        <strong>{{ total_quizzes }}</strong>
+                    </div>
+                </div>
+            </div>
+
+            <div class="list-group">
+                <a href="{{ url_for('manage_subjects') }}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-book me-2"></i> Manage Subjects
+                </a>
+                <a href="{{ url_for('manage_chapters') }}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-bookmark me-2"></i> Manage Chapters
+                </a>
+                <a href="{{ url_for('manage_quizzes') }}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-question-circle me-2"></i> Manage Quizzes
+                </a>
+                <a href="{{ url_for('manage_users') }}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-users me-2"></i> Manage Users
+                </a>
+                <a href="{{ url_for('admin_profile') }}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-user-cog me-2"></i> Admin Settings
+                </a>
+                <a href="{{ url_for('admin_register') }}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-user-plus me-2"></i> Register New Admin
+                </a>
+            </div>
+        </div>
+
+        <div class="col-md-9">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Recent Activity</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="activityChart"></canvas>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">Latest User Registrations</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="list-group list-group-flush">
+                                {% for user in users[:5] %}
+                                <div class="list-group-item">
+                                    <h6 class="mb-1">{{ user.full_name }}</h6>
+                                    <small class="text-muted">{{ user.email }}</small>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">Subject Performance</h5>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="subjectChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+<script>
+    // Sample data for charts - Update with real data from backend
+    const activityData = {
+        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+        data: [65, 59, 80, 81, 56, 55, 40]
+    };
+
+    const subjectData = {
+        labels: [{% for subject in subjects %}'{{ subject.name }}',{% endfor %}],
+        data: [{% for subject in subjects %}75,{% endfor %}]
+    };
+
+    createScoreChart('activityChart', activityData.labels, activityData.data);
+    createSubjectPerformanceChart('subjectChart', subjectData.labels, subjectData.data);
+</script>
+{% endblock %}

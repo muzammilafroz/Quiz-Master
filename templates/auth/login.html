@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}Student Login{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center align-items-center min-vh-100">
+    <div class="col-md-6 col-lg-4">
+        <div class="card border-0 shadow">
+            <div class="card-header bg-info text-white text-center py-3">
+                <h4 class="mb-0">Student Login</h4>
+            </div>
+            <div class="card-body p-4">
+                <form method="POST">
+                    {{ form.hidden_tag() }}
+                    <div class="mb-3">
+                        {{ form.email.label(class="form-label") }}
+                        {{ form.email(class="form-control", placeholder="Enter your email") }}
+                        {% if form.email.errors %}
+                            {% for error in form.email.errors %}
+                                <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.password.label(class="form-label") }}
+                        {{ form.password(class="form-control", placeholder="Enter your password") }}
+                        {% if form.password.errors %}
+                            {% for error in form.password.errors %}
+                                <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-info">Login</button>
+                        <a href="{{ url_for('register') }}" class="btn btn-outline-info">Register New Account</a>
+                    </div>
+                </form>
+                <div class="mt-4 text-center">
+                    <p>Are you an admin? <a href="{{ url_for('admin_login') }}" class="text-info">Login as Admin</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

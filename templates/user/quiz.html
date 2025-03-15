@@ -1,0 +1,455 @@
+{% extends "user/base_user.html" %}
+
+{% block title %}{{ quiz.chapter.name }} - Quiz{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Timer and Status Bar -->
+    <div id="timer-container" class="card mb-3 sticky-top" style="top: 0; z-index: 1000;">
+        <div class="card-body p-2">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <h5 class="mb-0">{{ quiz.chapter.name }} Quiz</h5>
+                    <small class="text-muted">Duration: {{ quiz.time_duration }} minutes</small>
+                </div>
+                <div class="col-md-6">
+                    <div class="d-flex justify-content-end align-items-center">
+                        <div class="me-2">Time Remaining: 
+                            <span id="timer" class="fw-bold">{{ time_info.minutes }}:{{ '%02d' % time_info.seconds }}</span>
+                        </div>
+                        <div class="progress flex-grow-1" style="height: 10px; max-width: 200px;">
+                            <div id="timer-progress" class="progress-bar 
+                                {{ 'bg-danger' if time_info.percentage < 25 else 'bg-warning' if time_info.percentage < 50 else 'bg-success' }}" 
+                                 style="width: {{ time_info.percentage }}%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Quiz Content -->
+        <div class="col-lg-9 order-lg-1 order-2">
+            <!-- Progress Bar -->
+            <div class="card mb-3">
+                <div class="card-body p-2">
+                    <div class="progress" style="height: 5px;">
+                        <div id="quiz-progress" class="progress-bar bg-success" style="width: {{ quiz_summary.progress_percentage }}%"></div>
+                    </div>
+                    <div class="d-flex justify-content-between mt-1">
+                        <small><span id="answered-count">{{ quiz_summary.answered }}</span> Answered</small>
+                        <small><span id="review-count">{{ quiz_summary.marked_for_review }}</span> Marked for Review</small>
+                        <small><span id="unanswered-count">{{ quiz_summary.not_answered + quiz_summary.not_visited }}</span> Unanswered</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Questions -->
+            {% for question in questions %}
+            <div id="question-{{ loop.index }}" class="question-card card mb-3" 
+                 style="{{ 'display: block;' if loop.index == current_question_num else 'display: none;' }}">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Question {{ loop.index }} of {{ questions|length }}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="question-text mb-3">
+                        <p>{{ question.question_statement }}</p>
+                        {% if question.question_image %}
+                        <div class="question-image text-center mb-3">
+                            <img src="{{ url_for('uploaded_file', filename=question.question_image) }}" class="img-fluid" style="max-height: 300px;">
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="options">
+                        <div class="form-check mb-2">
+                            <input type="radio" class="form-check-input answer-option" name="answer_{{ question.id }}" 
+                                id="option_{{ question.id }}_1" value="1" data-question-id="{{ question.id }}" 
+                                {% if quiz_data.answers.get(question.id|string) == 1 %}checked{% endif %}>
+                            <label class="form-check-label option-label" for="option_{{ question.id }}_1">
+                                {{ question.option_1 }}
+                            </label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input type="radio" class="form-check-input answer-option" name="answer_{{ question.id }}" 
+                                id="option_{{ question.id }}_2" value="2" data-question-id="{{ question.id }}" 
+                                {% if quiz_data.answers.get(question.id|string) == 2 %}checked{% endif %}>
+                            <label class="form-check-label option-label" for="option_{{ question.id }}_2">
+                                {{ question.option_2 }}
+                            </label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input type="radio" class="form-check-input answer-option" name="answer_{{ question.id }}" 
+                                id="option_{{ question.id }}_3" value="3" data-question-id="{{ question.id }}" 
+                                {% if quiz_data.answers.get(question.id|string) == 3 %}checked{% endif %}>
+                            <label class="form-check-label option-label" for="option_{{ question.id }}_3">
+                                {{ question.option_3 }}
+                            </label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input type="radio" class="form-check-input answer-option" name="answer_{{ question.id }}" 
+                                id="option_{{ question.id }}_4" value="4" data-question-id="{{ question.id }}" 
+                                {% if quiz_data.answers.get(question.id|string) == 4 %}checked{% endif %}>
+                            <label class="form-check-label option-label" for="option_{{ question.id }}_4">
+                                {{ question.option_4 }}
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer d-flex justify-content-between">
+                    <div>
+                        <!-- Navigation buttons -->
+                        <button type="button" class="btn btn-sm btn-primary me-1 prev-btn navigate-btn" 
+                                data-question="{{ loop.index - 1 }}" {% if loop.index == 1 %}disabled{% endif %}>Previous</button>
+                        <button type="button" class="btn btn-sm btn-primary next-btn navigate-btn" 
+                                data-question="{{ loop.index + 1 }}" {% if loop.index == questions|length %}disabled{% endif %}>Next</button>
+                    </div>
+                    <div>
+                        <!-- Action buttons -->
+                        <button type="button" class="btn btn-sm btn-danger me-2 clear-btn" 
+                                data-question-id="{{ question.id }}">Clear Answer</button>
+                        <button type="button" class="btn btn-sm btn-warning mark-review-btn" 
+                                data-question="{{ loop.index }}">Mark for Review</button>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+
+            <!-- Submit Quiz Form -->
+            <div class="d-grid mt-4 mb-5">
+                <button type="button" id="submit-quiz-btn" class="btn btn-lg btn-primary">
+                    Submit Quiz
+                </button>
+            </div>
+        </div>
+
+        <!-- Question Navigator - Right side on desktop -->
+        <div class="col-lg-3 order-lg-2 order-1 mb-3" id="question-navigator-container">
+            <div class="card sticky-top" style="top: 80px; z-index: 100;">
+                <div class="card-header">
+                    <h5 class="mb-0">Question Navigator</h5>
+                </div>
+                <div class="card-body">
+                    <div class="question-navigator d-flex flex-wrap gap-2">
+                        {% for i in range(1, questions|length + 1) %}
+                        <button type="button" class="btn 
+                            {% if i == current_question_num %}
+                                btn-primary
+                            {% elif quiz_data.question_status[i|string] == 'Answered' %}
+                                btn-success
+                            {% elif quiz_data.question_status[i|string] == 'Marked for Review' %}
+                                btn-warning
+                            {% elif quiz_data.question_status[i|string] == 'Not Answered' %}
+                                btn-danger
+                            {% else %}
+                                btn-outline-secondary
+                            {% endif %}
+                            question-btn navigate-btn" data-question="{{ i }}">{{ i }}</button>
+                        {% endfor %}
+                    </div>
+
+                    <div class="mt-3">
+                        <div class="d-flex align-items-center mb-2">
+                            <span class="badge bg-success me-2">&nbsp;</span>
+                            <small>Answered</small>
+                        </div>
+                        <div class="d-flex align-items-center mb-2">
+                            <span class="badge bg-warning me-2">&nbsp;</span>
+                            <small>Marked for Review</small>
+                        </div>
+                        <div class="d-flex align-items-center mb-2">
+                            <span class="badge bg-danger me-2">&nbsp;</span>
+                            <small>Not Answered</small>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <span class="badge bg-secondary me-2" style="opacity: 0.5;">&nbsp;</span>
+                            <small>Not Visited</small>
+                        </div>
+                    </div>
+                    <div class="d-grid mt-3">
+                        <button type="button" id="submit-quiz-sidebar-btn" class="btn btn-primary w-100">
+                            Submit Quiz
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Initialize tracking variables
+    let isSubmittingForm = false;
+    let finalSubmission = false;
+    let timerInterval;
+    
+    // Document ready handler
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize timer countdown
+        startTimer({{ time_info.minutes }}, {{ time_info.seconds }});
+        
+        // Handle answer option selection
+        document.querySelectorAll('.answer-option').forEach(radio => {
+            radio.addEventListener('change', handleAnswerSelection);
+        });
+        
+        // Handle navigation buttons
+        document.querySelectorAll('.navigate-btn').forEach(btn => {
+            btn.addEventListener('click', navigateToQuestion);
+        });
+        
+        // Handle clear answer button
+        document.querySelectorAll('.clear-btn').forEach(btn => {
+            btn.addEventListener('click', clearAnswer);
+        });
+        
+        // Handle mark for review button
+        document.querySelectorAll('.mark-review-btn').forEach(btn => {
+            btn.addEventListener('click', markForReview);
+        });
+        
+        // Handle quiz submission
+        document.querySelector('#submit-quiz-btn').addEventListener('click', submitQuiz);
+        document.querySelector('#submit-quiz-sidebar-btn').addEventListener('click', submitQuiz);
+        
+        // Prevent navigation warning when exiting legitimately
+        window.addEventListener('beforeunload', function(e) {
+            if (isSubmittingForm || finalSubmission) {
+                return;
+            }
+            
+            const message = 'Are you sure you want to leave? Your quiz progress may be lost.';
+            e.returnValue = message;
+            return message;
+        });
+    });
+    
+    // Handle answer selection
+    function handleAnswerSelection() {
+        const questionId = this.getAttribute('data-question-id');
+        const selectedOption = this.value;
+        
+        // Send AJAX request to save answer
+        fetch(`/user/quiz/{{ quiz.id }}/save_answer`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                question_id: questionId,
+                selected_option: selectedOption
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Update question indicator to green (answered)
+                updateQuestionStatus(data.question_number, 'Answered');
+                // Update progress count
+                updateProgressSummary();
+            }
+        })
+        .catch(error => console.error('Error saving answer:', error));
+    }
+    
+    // Navigate to a specific question
+    function navigateToQuestion() {
+        const questionNumber = parseInt(this.getAttribute('data-question'));
+        
+        // Hide all questions
+        document.querySelectorAll('.question-card').forEach(card => {
+            card.style.display = 'none';
+        });
+        
+        // Show the selected question
+        const questionCard = document.querySelector(`#question-${questionNumber}`);
+        if (questionCard) {
+            questionCard.style.display = 'block';
+            
+            // Send AJAX request to update navigation state
+            fetch(`/user/quiz/{{ quiz.id }}/navigate`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    question_number: questionNumber
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update question status if needed
+                    updateQuestionStatus(questionNumber, data.status);
+                }
+            })
+            .catch(error => console.error('Error navigating:', error));
+        }
+    }
+    
+    // Clear answer for a question
+    function clearAnswer() {
+        const questionId = this.getAttribute('data-question-id');
+        
+        // Uncheck all radio buttons for this question
+        document.querySelectorAll(`input[name="answer_${questionId}"]`).forEach(radio => {
+            radio.checked = false;
+        });
+        
+        // Send AJAX request to clear the answer
+        fetch(`/user/quiz/{{ quiz.id }}/clear_answer`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                question_id: questionId
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Update question indicator to red (not answered)
+                updateQuestionStatus(data.question_number, 'Not Answered');
+                // Update progress count
+                updateProgressSummary();
+            }
+        })
+        .catch(error => console.error('Error clearing answer:', error));
+    }
+    
+    // Mark question for review
+    function markForReview() {
+        const questionNumber = parseInt(this.getAttribute('data-question'));
+        
+        // Send AJAX request to mark for review
+        fetch(`/user/quiz/{{ quiz.id }}/mark_for_review`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                question_number: questionNumber
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Update question indicator to yellow (marked for review)
+                updateQuestionStatus(questionNumber, 'Marked for Review');
+                // Update progress count
+                updateProgressSummary();
+            }
+        })
+        .catch(error => console.error('Error marking for review:', error));
+    }
+    
+    // Submit the quiz
+    function submitQuiz() {
+        if (confirm('Are you sure you want to submit your quiz? This action cannot be undone.')) {
+            finalSubmission = true;
+            isSubmittingForm = true;
+            
+            // Submit the quiz
+            fetch(`/user/quiz/{{ quiz.id }}/submit`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => {
+                if (response.redirected) {
+                    window.location.href = response.url;
+                } else {
+                    return response.json();
+                }
+            })
+            .then(data => {
+                if (data && data.redirect) {
+                    window.location.href = data.redirect;
+                }
+            })
+            .catch(error => console.error('Error submitting quiz:', error));
+        }
+    }
+    
+    // Update UI elements for question status
+    function updateQuestionStatus(questionNumber, status) {
+        const btn = document.querySelector(`.question-btn[data-question="${questionNumber}"]`);
+        if (btn) {
+            btn.classList.remove('btn-success', 'btn-warning', 'btn-danger', 'btn-outline-secondary', 'btn-primary');
+            
+            switch (status) {
+                case 'Answered':
+                    btn.classList.add('btn-success');
+                    break;
+                case 'Marked for Review':
+                    btn.classList.add('btn-warning');
+                    break;
+                case 'Not Answered':
+                    btn.classList.add('btn-danger');
+                    break;
+                case 'Not Visited':
+                    btn.classList.add('btn-outline-secondary');
+                    break;
+            }
+        }
+    }
+    
+    // Update progress summary counts
+    function updateProgressSummary() {
+        // Make an AJAX request to get updated summary
+        fetch(`/user/quiz/{{ quiz.id }}/summary`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.summary) {
+                document.querySelector('#answered-count').textContent = data.summary.answered;
+                document.querySelector('#review-count').textContent = data.summary.marked_for_review;
+                document.querySelector('#unanswered-count').textContent = 
+                    data.summary.not_answered + data.summary.not_visited;
+                document.querySelector('#quiz-progress').style.width = data.summary.progress_percentage + '%';
+            }
+        })
+        .catch(error => console.error('Error updating summary:', error));
+    }
+    
+    // Timer functionality
+    function startTimer(minutes, seconds) {
+        let totalSeconds = (minutes * 60) + seconds;
+        const timerDisplay = document.getElementById('timer');
+        const timerProgress = document.getElementById('timer-progress');
+        const totalDuration = {{ quiz.time_duration * 60 }};
+        
+        timerInterval = setInterval(function() {
+            totalSeconds--;
+            
+            if (totalSeconds <= 0) {
+                clearInterval(timerInterval);
+                alert('Time\'s up! Submitting your quiz automatically.');
+                finalSubmission = true;
+                isSubmittingForm = true;
+                window.location.href = `/user/quiz/{{ quiz.id }}/submit?forced_submit=true`;
+                return;
+            }
+            
+            const minutesLeft = Math.floor(totalSeconds / 60);
+            const secondsLeft = totalSeconds % 60;
+            timerDisplay.textContent = `${minutesLeft}:${secondsLeft.toString().padStart(2, '0')}`;
+            
+            // Update progress bar
+            const percentage = (totalSeconds / totalDuration) * 100;
+            timerProgress.style.width = percentage + '%';
+            
+            // Change color based on time remaining
+            if (percentage < 25) {
+                timerProgress.className = 'progress-bar bg-danger';
+            } else if (percentage < 50) {
+                timerProgress.className = 'progress-bar bg-warning';
+            }
+        }, 1000);
+    }
+</script>
+{% endblock %}

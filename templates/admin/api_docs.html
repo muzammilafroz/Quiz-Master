@@ -1,0 +1,269 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}API Documentation{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col">
+            <h2>QuizMaster API Documentation</h2>
+            <p class="text-muted">Access and manage your QuizMaster data programmatically</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-3">
+            <div class="list-group mb-4 sticky-top" style="top: 20px;">
+                <a href="#subjects-api" class="list-group-item list-group-item-action">Subjects API</a>
+                <a href="#chapters-api" class="list-group-item list-group-item-action">Chapters API</a>
+                <a href="#quizzes-api" class="list-group-item list-group-item-action">Quizzes API</a>
+                <a href="#stats-api" class="list-group-item list-group-item-action">Stats API</a>
+                <a href="#authentication" class="list-group-item list-group-item-action">Authentication</a>
+                <a href="#examples" class="list-group-item list-group-item-action">Examples</a>
+            </div>
+        </div>
+
+        <div class="col-md-9">
+            <!-- Subjects API -->
+            <div class="card mb-4" id="subjects-api">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Subjects API</h5>
+                </div>
+                <div class="card-body">
+                    <h5>List all subjects</h5>
+                    <pre class="bg-light p-3 rounded"><code>GET /api/subjects</code></pre>
+                    <p>Returns a list of all subjects</p>
+                    
+                    <h5>Get a specific subject</h5>
+                    <pre class="bg-light p-3 rounded"><code>GET /api/subjects/{subject_id}</code></pre>
+                    <p>Returns detailed information about a specific subject including its chapters</p>
+                    
+                    <h5>Create a new subject</h5>
+                    <pre class="bg-light p-3 rounded"><code>POST /api/subjects
+Content-Type: application/json
+
+{
+    "name": "Subject Name",
+    "description": "Subject Description"
+}</code></pre>
+                    <p>Creates a new subject (Admin only)</p>
+                    
+                    <h5>Create multiple subjects</h5>
+                    <pre class="bg-light p-3 rounded"><code>POST /api/subjects
+Content-Type: application/json
+
+[
+    {
+        "name": "First Subject",
+        "description": "First Subject Description"
+    },
+    {
+        "name": "Second Subject",
+        "description": "Second Subject Description"
+    }
+]</code></pre>
+                    <p>Creates multiple subjects in a single request (Admin only)</p>
+                    
+                    <h5>Update a subject</h5>
+                    <pre class="bg-light p-3 rounded"><code>PUT /api/subjects/{subject_id}
+Content-Type: application/json
+
+{
+    "name": "Updated Subject Name",
+    "description": "Updated Description"
+}</code></pre>
+                    <p>Updates an existing subject (Admin only)</p>
+                    
+                    <h5>Delete a subject</h5>
+                    <pre class="bg-light p-3 rounded"><code>DELETE /api/subjects/{subject_id}</code></pre>
+                    <p>Deletes a subject if it has no chapters (Admin only)</p>
+                </div>
+            </div>
+
+            <!-- Chapters API -->
+            <div class="card mb-4" id="chapters-api">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Chapters API</h5>
+                </div>
+                <div class="card-body">
+                    <h5>List all chapters</h5>
+                    <pre class="bg-light p-3 rounded"><code>GET /api/chapters</code></pre>
+                    <p>Returns a list of all chapters with their associated subjects</p>
+                    
+                    <h5>Create a new chapter</h5>
+                    <pre class="bg-light p-3 rounded"><code>POST /api/chapters
+Content-Type: application/json
+
+{
+    "name": "Chapter Name",
+    "description": "Chapter Description",
+    "subject_id": 1
+}</code></pre>
+                    <p>Creates a new chapter under the specified subject (Admin only)</p>
+                    <!-- Add after the existing "Create a new chapter" section -->
+                    <h5>Create multiple chapters</h5>
+                    <pre class="bg-light p-3 rounded"><code>POST /api/chapters
+Content-Type: application/json
+
+[
+    {
+        "name": "Chapter 1",
+        "description": "First chapter description",
+        "subject_id": 1
+    },
+    {
+        "name": "Chapter 2",
+        "description": "Second chapter description",
+        "subject_id": 1
+    }
+]</code></pre>
+                    <p>Creates multiple chapters in a single request (Admin only)</p>
+                </div>
+            </div>
+
+            <!-- Quizzes API -->
+            <div class="card mb-4" id="quizzes-api">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">Quizzes API</h5>
+                </div>
+                <div class="card-body">
+                    <h5>List all quizzes</h5>
+                    <pre class="bg-light p-3 rounded"><code>GET /api/quizzes</code></pre>
+                    <p>Returns a list of all quizzes with their associated chapters and subjects</p>
+                    
+                    <h5>Create a new quiz</h5>
+                    <pre class="bg-light p-3 rounded"><code>POST /api/quizzes
+Content-Type: application/json
+
+{
+    "chapter_id": 1,
+    "date_of_quiz": "2023-07-15",
+    "time_duration": 30,
+    "remarks": "Optional remarks"
+}</code></pre>
+                    <p>Creates a new quiz under the specified chapter (Admin only)</p>
+                    <!-- Add after the existing "Create a new quiz" section -->
+                    <h5>Create multiple quizzes</h5>
+                    <pre class="bg-light p-3 rounded"><code>POST /api/quizzes
+Content-Type: application/json
+
+[
+    {
+        "chapter_id": 1,
+        "date_of_quiz": "2023-07-15",
+        "time_duration": 30,
+        "remarks": "First quiz remarks"
+    },
+    {
+        "chapter_id": 2,
+        "date_of_quiz": "2023-08-20",
+        "time_duration": 45,
+        "remarks": "Second quiz remarks"
+    }
+]</code></pre>
+                    <p>Creates multiple quizzes in a single request (Admin only)</p>
+                </div>
+            </div>
+
+            <!-- Stats API -->
+            <div class="card mb-4" id="stats-api">
+                <div class="card-header bg-warning">
+                    <h5 class="mb-0">Stats API</h5>
+                </div>
+                <div class="card-body">
+                    <h5>Get system statistics</h5>
+                    <pre class="bg-light p-3 rounded"><code>GET /api/stats</code></pre>
+                    <p>Returns count statistics for subjects, chapters, quizzes, and questions (Admin only)</p>
+                </div>
+            </div>
+
+            <!-- Authentication -->
+            <div class="card mb-4" id="authentication">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">Authentication</h5>
+                </div>
+                <div class="card-body">
+                    <p>The API uses cookie-based authentication. You need to be logged in as an administrator for endpoints marked as "Admin only".</p>
+                    <p>Public endpoints can be accessed by any authenticated user.</p>
+                </div>
+            </div>
+
+            <!-- Example Usage -->
+            <div class="card" id="examples">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0">Example Usage</h5>
+                </div>
+                <div class="card-body">
+                    <h5>JavaScript Example</h5>
+                    <pre class="bg-light p-3 rounded"><code>// Fetch all subjects
+fetch('/api/subjects')
+  .then(response => response.json())
+  .then(data => console.log(data))
+  .catch(error => console.error('Error fetching subjects:', error));
+
+// Create a new subject
+fetch('/api/subjects', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    name: 'New Subject',
+    description: 'Subject Description'
+  })
+})
+  .then(response => response.json())
+  .then(data => console.log(data))
+  .catch(error => console.error('Error creating subject:', error));
+
+// Create multiple subjects
+fetch('/api/subjects', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify([
+    { name: 'Mathematics', description: 'Study of numbers and patterns' },
+    { name: 'Science', description: 'Study of the natural world' }
+  ])
+})
+  .then(response => response.json())
+  .then(data => console.log(data))
+  .catch(error => console.error('Error creating subjects:', error));
+
+// Create multiple chapters
+fetch('/api/chapters', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify([
+    { name: 'Algebra', description: 'Study of mathematical symbols', subject_id: 1 },
+    { name: 'Geometry', description: 'Study of shapes and spaces', subject_id: 1 }
+  ])
+})
+  .then(response => response.json())
+  .then(data => console.log(data))
+  .catch(error => console.error('Error creating chapters:', error));
+
+// Create multiple quizzes
+fetch('/api/quizzes', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify([
+    { chapter_id: 1, date_of_quiz: '2023-09-15', time_duration: 30, remarks: 'Mid-term quiz' },
+    { chapter_id: 2, date_of_quiz: '2023-10-20', time_duration: 45, remarks: 'Final quiz' }
+  ])
+})
+  .then(response => response.json())
+  .then(data => console.log(data))
+  .catch(error => console.error('Error creating quizzes:', error));
+</code></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

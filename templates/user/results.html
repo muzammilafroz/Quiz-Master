@@ -1,0 +1,186 @@
+{% extends "user/base_user.html" %}
+
+{% block title %}Quiz Results{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-3">
+        <div class="col">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('user_dashboard') }}">Dashboard</a></li>
+                    <li class="breadcrumb-item active">Quiz Results</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2>Quiz Results: {{ quiz.chapter.name }}</h2>
+            <p class="text-muted">{{ quiz.chapter.subject.name }}</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{{ url_for('review_quiz', quiz_id=quiz.id, score_id=score.id) }}" class="btn btn-primary">
+                <i class="fas fa-search"></i> Review Quiz
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <!-- Score Card -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Your Score</h5>
+                </div>
+                <div class="card-body text-center py-4">
+                    <div class="display-1 mb-3 
+                        {{ 'text-success' if score.total_scored >= 70 else 'text-warning' if score.total_scored >= 40 else 'text-danger' }}">
+                        {{ score.total_scored }}%
+                    </div>
+                    <div class="progress mb-3" style="height: 20px;">
+                        <div class="progress-bar bg-{{ 'success' if score.total_scored >= 70 else 'warning' if score.total_scored >= 40 else 'danger' }}" 
+                             role="progressbar" 
+                             style="width: {{ score.total_scored }}%;" 
+                             aria-valuenow="{{ score.total_scored }}" 
+                             aria-valuemin="0" 
+                             aria-valuemax="100">
+                        </div>
+                    </div>
+                    <p class="mb-0">Completed on {{ score.time_stamp_of_attempt.strftime('%d %B %Y at %H:%M') }}</p>
+                </div>
+            </div>
+
+            <!-- Performance Breakdown -->
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">Performance Breakdown</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-4 mb-3">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h6 class="text-muted">Correct Answers</h6>
+                                    <h2 class="text-success mb-0">{{ score.correct_answers }}</h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h6 class="text-muted">Wrong Answers</h6>
+                                    <h2 class="text-danger mb-0">{{ score.wrong_answers }}</h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h6 class="text-muted">Not Attempted</h6>
+                                    <h2 class="text-secondary mb-0">{{ score.not_attempted }}</h2>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-md-6 mb-3">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h6 class="text-muted">Accuracy</h6>
+                                    <div class="progress" style="height: 30px;">
+                                        <div class="progress-bar 
+                                            {{ 'bg-success' if ((score.correct_answers / (score.correct_answers + score.wrong_answers) * 100)|round|int if (score.correct_answers + score.wrong_answers) > 0 else 0) >= 70 else 'bg-warning' if ((score.correct_answers / (score.correct_answers + score.wrong_answers) * 100)|round|int if (score.correct_answers + score.wrong_answers) > 0 else 0) >= 40 else 'bg-danger' }}" 
+                                             role="progressbar" 
+                                             style="width: {{ (score.correct_answers / (score.correct_answers + score.wrong_answers) * 100)|round|int if (score.correct_answers + score.wrong_answers) > 0 else 0 }}%;" 
+                                             aria-valuenow="{{ (score.correct_answers / (score.correct_answers + score.wrong_answers) * 100)|round|int if (score.correct_answers + score.wrong_answers) > 0 else 0 }}" 
+                                             aria-valuemin="0" 
+                                             aria-valuemax="100">
+                                            {{ (score.correct_answers / (score.correct_answers + score.wrong_answers) * 100)|round|int if (score.correct_answers + score.wrong_answers) > 0 else 0 }}%
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h6 class="text-muted">Total Questions</h6>
+                                    <h2 class="mb-0">{{ score.total_questions }}</h2>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <!-- Performance Trend -->
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Progress Over Time</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="performanceChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Feedback Card -->
+            <div class="card">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0">Performance Feedback</h5>
+                </div>
+                <div class="card-body">
+                    {% if score.total_scored >= 80 %}
+                    <div class="alert alert-success">
+                        <h5>Excellent!</h5>
+                        <p>You've mastered this topic. Keep up the great work!</p>
+                    </div>
+                    {% elif score.total_scored >= 60 %}
+                    <div class="alert alert-info">
+                        <h5>Good Job!</h5>
+                        <p>You have a good understanding of this topic, but there's still room for improvement.</p>
+                    </div>
+                    {% elif score.total_scored >= 40 %}
+                    <div class="alert alert-warning">
+                        <h5>Almost There</h5>
+                        <p>You have some understanding, but need more practice on this topic.</p>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-danger">
+                        <h5>Need Improvement</h5>
+                        <p>You should revisit this topic and try again after additional study.</p>
+                    </div>
+                    {% endif %}
+
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('review_quiz', quiz_id=quiz.id, score_id=score.id) }}" class="btn btn-primary">
+                            Review Your Answers
+                        </a>
+                        <a href="{{ url_for('user_dashboard') }}" class="btn btn-outline-secondary">
+                            Back to Dashboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Performance chart data
+        const labels = {{ progress_labels|tojson }};
+        const data = {{ progress_data|tojson }};
+
+        // Create chart
+        createScoreChart('performanceChart', labels, data);
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,61 @@
+
+/* Quiz styles */
+.question-status {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.question-status.not-visited {
+    background-color: #e9ecef;
+    border: 1px solid #ced4da;
+}
+
+.question-status.current {
+    background-color: #0d6efd;
+}
+
+.question-status.answered {
+    background-color: #198754;
+}
+
+.question-status.marked {
+    background-color: #ffc107;
+}
+
+/* Fixed timer for mobile view */
+@media (max-width: 768px) {
+    .card-header {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+    }
+    
+    .question-nav {
+        margin-top: 2rem;
+        position: relative;
+        top: 0;
+    }
+}
+
+/* Make sure quiz timer is always visible */
+#quiz-timer {
+    transition: all 0.3s ease;
+}
+
+/* Current question highlighting */
+.question-item.current {
+    border-width: 3px;
+}
+
+/* Make sure answer options are clearly visible in both themes */
+.form-check-label {
+    color: var(--bs-body-color);
+}
+
+.options {
+    padding: 10px;
+    border-radius: 8px;
+    background-color: rgba(var(--bs-tertiary-bg-rgb), 0.5);
+}

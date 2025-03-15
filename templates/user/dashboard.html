@@ -1,0 +1,155 @@
+{% extends "user/base_user.html" %}
+
+{% block title %}Student Dashboard{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col">
+            <h2>Student Dashboard</h2>
+            <p class="text-muted">Welcome, {{ current_user.full_name }}</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Subjects and Quiz Selection -->
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Available Quizzes</h5>
+                </div>
+                <div class="card-body">
+                    <div class="accordion" id="subjectsAccordion">
+                        {% for subject in subjects %}
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="heading{{ subject.id }}">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" 
+                                        data-bs-target="#collapse{{ subject.id }}">
+                                    {{ subject.name }}
+                                </button>
+                            </h2>
+                            <div id="collapse{{ subject.id }}" class="accordion-collapse collapse" 
+                                 data-bs-parent="#subjectsAccordion">
+                                <div class="accordion-body">
+                                    <p class="mb-3">{{ subject.description }}</p>
+                                    
+                                    {% if subject.chapters %}
+                                    <div class="list-group">
+                                        {% for chapter in subject.chapters %}
+                                        <div class="list-group-item">
+                                            <h6>{{ chapter.name }}</h6>
+                                            <p class="mb-2 small">{{ chapter.description }}</p>
+                                            
+                                            {% if chapter.quizzes %}
+                                            <div class="list-group">
+                                                {% for quiz in chapter.quizzes %}
+                                                <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                                                    <div>
+                                                        <h6 class="mb-1">Quiz: {{ quiz.chapter.name }}</h6>
+                                                        <p class="mb-1 small">{{ quiz.remarks }}</p>
+                                                        <small>
+                                                            <span class="text-muted">Date: {{ quiz.date_of_quiz.strftime('%Y-%m-%d') }}</span> | 
+                                                            <span class="text-muted">Duration: {{ quiz.time_duration }} mins</span>
+                                                        </small>
+                                                    </div>
+                                                    {% if quiz_in_progress and quiz_in_progress.get('quiz_id') == quiz.id %}
+                                                    <a href="{{ url_for('take_quiz', quiz_id=quiz.id) }}" class="btn btn-sm btn-warning">
+                                                        Continue Quiz
+                                                    </a>
+                                                    {% else %}
+                                                    <a href="{{ url_for('take_quiz', quiz_id=quiz.id) }}" class="btn btn-sm btn-primary">
+                                                        Start Quiz
+                                                    </a>
+                                                    {% endif %}
+                                                </div>
+                                                {% endfor %}
+                                            </div>
+                                            {% else %}
+                                            <p class="text-muted small">No quizzes available for this chapter.</p>
+                                            {% endif %}
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                    {% else %}
+                                    <p class="text-muted">No chapters available for this subject.</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    {% if not subjects %}
+                    <div class="alert alert-info">
+                        No subjects are available yet. Check back later!
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Recent Scores and Performance -->
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Recent Scores</h5>
+                </div>
+                <div class="card-body">
+                    {% if recent_scores %}
+                    <div class="list-group">
+                        {% for score in recent_scores %}
+                        <a href="{{ url_for('view_score', score_id=score.id) }}" class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">{{ score.quiz.chapter.name }}</h6>
+                                <small>{{ score.time_stamp_of_attempt.strftime('%d %b %Y') }}</small>
+                            </div>
+                            <div class="progress mt-2" style="height: 10px;">
+                                <div class="progress-bar bg-{{ 'success' if score.total_scored >= 70 else 'warning' if score.total_scored >= 40 else 'danger' }}" 
+                                     role="progressbar" 
+                                     style="width: {{ score.total_scored }}%;" 
+                                     aria-valuenow="{{ score.total_scored }}" 
+                                     aria-valuemin="0" 
+                                     aria-valuemax="100">
+                                </div>
+                            </div>
+                            <small class="mt-1 d-block">Score: {{ score.total_scored }}%</small>
+                        </a>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted">You haven't taken any quizzes yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Performance Overview Chart -->
+            {% if recent_scores %}
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">Performance Overview</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="performanceChart"></canvas>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{% if recent_scores %}
+<script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Get last 5 scores
+        const labels = {{ progress_labels|tojson }};
+        const data = {{ progress_data|tojson }};
+        
+        // Create performance chart
+        createScoreChart('performanceChart', labels, data);
+    });
+</script>
+{% endif %}
+{% endblock %}
